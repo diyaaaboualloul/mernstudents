@@ -1,60 +1,68 @@
-// 🧠 Import global styles and components
-import "./App.css";          // general styles for the whole app
-import Header from "./Header";  
-import "./Header.css";       // styles for the Header component
+// 🌐 Import global styles and components
+import "./App.css";
+import Header from "./Header";
+import "./Header.css";
 
-// 🧠 Import our main functional components
-import StudentsList from "./components/StudentsList";   // shows the list of students
-import StudentForm from "./components/StudentForm";     // handles add & edit of students
-
-// 🧠 Import useState hook to manage state in this component
+import StudentsList from "./components/StudentsList";
+import StudentForm from "./components/StudentForm";
 import { useState } from "react";
 
+// 🧭 Import Router components
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import About from "./pages/About"; // New page we created
+
 function App() {
-  // 🧠 This state keeps track of the student currently being edited.
-  // - If it's null → the form is in "Add" mode
-  // - If it's a student object → the form switches to "Edit" mode
   const [editingStudent, setEditingStudent] = useState(null);
+  const navigate = useNavigate(); // for programmatic navigation
 
   return (
     <>
-      {/* 📝 Header component — appears at the top of the page */}
       <Header />
 
       <div className="container">
-        <h2>Students</h2>
+        {/* 🧭 Simple navigation links */}
+        <nav style={{ marginBottom: "20px" }}>
+          {/* These <Link> components act like <a>, but without page reload */}
+          <Link to="/" style={{ marginRight: "10px" }}>🏠 Home</Link>
+          <Link to="/about">📄 About</Link>
 
-        {/* ✏️ StudentForm is used for both Adding and Editing */}
-        <StudentForm
-          // 👇 Pass the current student to edit (or null for add mode)
-          editingStudent={editingStudent}
+          {/* Example: Navigate using a button */}
+          <button 
+            onClick={() => navigate("/about")} 
+            style={{ marginLeft: "10px" }}
+          >
+            Go to About ➡️
+          </button>
+        </nav>
 
-          // ❌ When "Cancel" button is clicked in the form, exit edit mode
-          onCancelEdit={() => setEditingStudent(null)}
+        {/* 🧠 Define all routes for your app */}
+        <Routes>
+          {/* 🏠 Home Page → shows Student Form + List */}
+          <Route 
+            path="/" 
+            element={
+              <>
+                <h2>Students</h2>
+                <StudentForm
+                  editingStudent={editingStudent}
+                  onCancelEdit={() => setEditingStudent(null)}
+                  onAdded={() => window.location.reload()}
+                  onUpdated={() => {
+                    setEditingStudent(null);
+                    window.location.reload();
+                  }}
+                />
+                <StudentsList onEdit={(student) => setEditingStudent(student)} />
+              </>
+            } 
+          />
 
-          // ➕ After adding a student, simply reload the page to refresh the list
-          onAdded={() => window.location.reload()}
-
-          // ✏️ After updating a student:
-          // - Exit edit mode
-          // - Reload page to refresh the students list
-          onUpdated={() => {
-            setEditingStudent(null);
-            window.location.reload();
-          }}
-        />
-
-        {/* 📋 StudentsList displays all students in a table */}
-        <StudentsList
-          // When the Edit button is clicked inside StudentsList
-          // → set the clicked student as the one we're editing
-          // This triggers StudentForm to switch to edit mode and fill the data
-          onEdit={(student) => setEditingStudent(student)}
-        />
+          {/* 📄 About Page */}
+          <Route path="/about" element={<About />} />
+        </Routes>
       </div>
     </>
   );
 }
 
-// 📝 Export the component so React can render it
 export default App;
