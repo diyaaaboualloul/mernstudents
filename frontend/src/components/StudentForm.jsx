@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "./api";
 
+// 📝 This component handles both ➕ adding and ✏️ editing students
 export default function StudentForm({ onAdded, editingStudent, onUpdated, onCancelEdit }) {
+  // 🧠 form: stores the values of the input fields
   const [form, setForm] = useState({ name: "", age: "", email: "" });
+  // 🧠 loading: shows "Saving..." while sending data to backend
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  // 👉 If we're editing, load the student data into the form
+  // 📌 When editingStudent changes (user clicked Edit):
+  // - If it's not null → load the student data into the form for editing
+  // - If it's null → clear the form (new student mode)
   useEffect(() => {
     if (editingStudent) {
       setForm({
@@ -19,48 +23,45 @@ export default function StudentForm({ onAdded, editingStudent, onUpdated, onCanc
     }
   }, [editingStudent]);
 
+  // 📌 Runs every time the user types in the input fields
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
+  // 📌 Runs when the form is submitted (Add or Update)
   async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault();         // prevent page refresh
+    setLoading(true);           // show "Saving..." on button
 
-    try {
-      if (editingStudent) {
-        // 👉 UPDATE
-        const res = await fetch(`${API_URL}/students/${editingStudent._id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-        if (!res.ok) throw new Error("Failed to update student");
-        const updated = await res.json();
-        onUpdated?.(updated);
-      } else {
-        // 👉 CREATE
-        const res = await fetch(`${API_URL}/students`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-        if (!res.ok) throw new Error("Failed to add student");
-        const newStudent = await res.json();
-        onAdded?.(newStudent);
-      }
-
-      setForm({ name: "", age: "", email: "" });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    // ✅ If we're editing → send PUT request
+    if (editingStudent) {
+      const res = await fetch(`${API_URL}/students/${editingStudent._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const updated = await res.json();
+      onUpdated(updated);       // notify parent component
+    } 
+    // ✅ If we're adding a new student → send POST request
+    else {
+      const res = await fetch(`${API_URL}/students`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const newStudent = await res.json();
+      onAdded(newStudent);      // notify parent component
     }
+
+    // ✨ Reset the form fields after submission
+    setForm({ name: "", age: "", email: "" });
+    setLoading(false);
   }
 
   return (
     <form onSubmit={handleSubmit} className="student-form">
+      {/* 🧠 Input fields bound to form state */}
       <input
         type="text"
         name="name"
@@ -85,15 +86,18 @@ export default function StudentForm({ onAdded, editingStudent, onUpdated, onCanc
         onChange={handleChange}
         required
       />
+
+      {/* 📝 Button changes depending on add or edit mode */}
       <button type="submit" disabled={loading}>
         {loading ? "Saving..." : editingStudent ? "Update Student" : "Add Student"}
       </button>
+
+      {/* ❌ Show Cancel button only when editing */}
       {editingStudent && (
         <button type="button" onClick={onCancelEdit}>
           Cancel
         </button>
       )}
-      {error && <p style={{ color: "red" }}>{error}</p>}
     </form>
   );
 }
