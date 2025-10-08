@@ -1,14 +1,11 @@
-// 🌐 Import global styles and components
+// src/App.jsx
 import "./App.css";
-import Header from "./Header";
-import "./Header.css";
-
-// 🧭 Router imports
+import Header from "./components/Header";
 import { Routes, Route } from "react-router-dom";
 
-// 🧭 Import pages
+import Home from "./pages/Home";
 import About from "./pages/About";
-import Home from "./pages/Home"; // 👈 New Home page
+import Courses from "./pages/Courses";  // 👈 New Page
 
 function App() {
   return (
@@ -16,11 +13,9 @@ function App() {
       <Header />
       <div className="container">
         <Routes>
-          {/* 🏠 Home page route */}
           <Route path="/" element={<Home />} />
-
-          {/* 📄 About page route */}
           <Route path="/about" element={<About />} />
+          <Route path="/courses" element={<Courses />} /> {/* ✅ New route */}
         </Routes>
       </div>
     </>
